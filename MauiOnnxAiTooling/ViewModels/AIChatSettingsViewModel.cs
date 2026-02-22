@@ -308,7 +308,7 @@ public class AIChatSettingsViewModel : ObservableObject
 	#region public methods
 	public string BuildSystemPrompt()
 	{
-		string prompt = "You will be a helpful friendly assistant"; 
+		string prompt = $"You will be a helpful friendly assistant. Today's date and time is {DateTime.Now.ToString()}" ; 
 
 		if (EnableTooling)
 		{
