@@ -106,7 +106,7 @@
 
 							<Grid>
 								<!-- WebView for HTML Content -->
-								<WebView
+								<!--<WebView
 									Source="{Binding StreamingText, Converter={StaticResource HtmlSourceConverter}}"
 									HeightRequest="300"
 									WidthRequest="300"
@@ -121,7 +121,7 @@
 												Value="True" />
 										</DataTrigger>
 									</WebView.Triggers>
-								</WebView>
+								</WebView>-->
 
 								<!-- Keep Label for User messages for better performance/look -->
 								<Label
