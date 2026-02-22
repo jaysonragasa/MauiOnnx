@@ -35,7 +35,7 @@ public class AIChatViewModel : ObservableObject
 		set => SetProperty(ref _userInput, value);
 	}
 
-	private string _statusMessage = "Ready to load model.";
+	private string _statusMessage = "";
 	public string StatusMessage
 	{
 		get => _statusMessage;
@@ -93,10 +93,10 @@ public class AIChatViewModel : ObservableObject
 		var fullContext = new List<AIChatMessageModel>();
 		{
 			// add system message
-			fullContext.Add(new AIChatMessageModel(ChatRole.System, this.AISettings.SystemPrompt));
+			fullContext.Add(AIChatMessageModel.Create(ChatRole.System, this.AISettings.SystemPrompt));
 			// add previous messages
-			//foreach (var msg in Messages)
-			//	fullContext.Add(new AIChatMessageModel(msg.Role, msg.StreamingText));
+			foreach (var msg in Messages)
+				fullContext.Add(AIChatMessageModel.Create(msg.Role, msg.StreamingText));
 			// add user input
 			var userMsg = new AIChatMessageModel(ChatRole.User, UserInput);
 			Messages.Add(userMsg); // add to UI
@@ -111,7 +111,7 @@ public class AIChatViewModel : ObservableObject
 		try
 		{
 			// prepare assistant response
-			var assistantMsg = new AIChatMessageModel(ChatRole.Assistant, "");
+			var assistantMsg = AIChatMessageModel.Create(ChatRole.Assistant, "");
 			Messages.Add(assistantMsg);
 
 			await Task.Delay(1);
@@ -201,7 +201,7 @@ public class AIChatViewModel : ObservableObject
 			}
 
 			// store raw, not the post processed msg
-			var rawmsg = new AIChatMessageModel(ChatRole.Assistant, sb.ToString());
+			var rawmsg = AIChatMessageModel.Create(ChatRole.Assistant, sb.ToString());
 			fullContext.Add(rawmsg);
 
 			if (string.IsNullOrEmpty(toolJSON))
@@ -215,10 +215,6 @@ public class AIChatViewModel : ObservableObject
 				{
 					json = $"[{json}]";
 
-					//if(toolJSON)
-					//string json = SanitizeJson(toolJSON);
-
-					//var tools = System.Text.Json.JsonSerializer.Deserialize<List<AIChatTool>>(json);
 					var tools = System.Text.Json.JsonSerializer.Deserialize<List<AIChatToolModel>>(json);
 					if (tools is null) return;
 					foreach (var tool in tools)
@@ -237,7 +233,7 @@ public class AIChatViewModel : ObservableObject
 
 								var result = await thetool.ExecuteAsync(tool.parameters);
 
-								var msg = new AIChatMessageModel(ChatRole.Assistant, result);
+								var msg = AIChatMessageModel.Create(ChatRole.Assistant, result);
 								Messages.Add(msg);
 
 								break;
@@ -249,7 +245,7 @@ public class AIChatViewModel : ObservableObject
 		}
 		catch (Exception ex)
 		{
-			Messages.Add(new AIChatMessageModel(ChatRole.System, $"Error: {ex.Message}\r\ntoolJson: {toolJSON}"));
+			Messages.Add(AIChatMessageModel.Create(ChatRole.System, $"Error: {ex.Message}\r\ntoolJson: {toolJSON}"));
 		}
 		finally
 		{
@@ -279,6 +275,7 @@ public class AIChatViewModel : ObservableObject
 
 		if (File.Exists(targetConfig) && File.Exists(targetModel))
 		{
+			IsProcessing = true;
 			try
 			{
 				MainThread.BeginInvokeOnMainThread(() => StatusMessage = "Found existing model. Loading...");
@@ -301,6 +298,7 @@ public class AIChatViewModel : ObservableObject
 			{
 				MainThread.BeginInvokeOnMainThread(() => StatusMessage = $"Auto-load failed: {ex.Message}");
 			}
+			IsProcessing = false;
 		}
 	}
 

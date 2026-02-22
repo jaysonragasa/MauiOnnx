@@ -48,7 +48,7 @@ public class AIChatMessageModel : ChatMessage, INotifyPropertyChanged
 	public AIChatMessageModel(ChatRole role, string? content, AIChatResponseType responseType = AIChatResponseType.Text) : base(role, content)
 	{
 		ResponseType = responseType;
-		StreamingText = content;
+		StreamingText = content ?? "";
 	}
 
 	public event PropertyChangedEventHandler? PropertyChanged;

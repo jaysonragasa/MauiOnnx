@@ -14,7 +14,7 @@ public class AIChatSettingsViewModel : ObservableObject
 	#endregion
 
 	#region properties
-	public string SystemPrompt => GetEffectiveSystemPrompt();
+	public string SystemPrompt => BuildSystemPrompt();
 
 	public bool EnableTooling => false;
 
@@ -196,126 +196,127 @@ public class AIChatSettingsViewModel : ObservableObject
 		}
 	}
 
-	private async Task LoadLocalModelAsync()
-	{
-		try
-		{
-			FileResult? result = null;
+	//private async Task LoadLocalModelAsync()
+	//{
+	//	try
+	//	{
+	//		FileResult? result = null;
 
-			result = await FilePicker.Default.PickAsync(new PickOptions
-			{
-				PickerTitle = "Select ONNX Model (inside model folder)",
-				FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
-				{
-					{ DevicePlatform.WinUI, new[] { ".onnx" } },
-					{ DevicePlatform.Android, new[] { "application/octet-stream" } },
-					{ DevicePlatform.iOS, new[] { "public.data" } },
-					{ DevicePlatform.MacCatalyst, new[] { "public.data" } }
-				})
-			});
+	//		result = await FilePicker.Default.PickAsync(new PickOptions
+	//		{
+	//			PickerTitle = "Select ONNX Model (inside model folder)",
+	//			FileTypes = new FilePickerFileType(new Dictionary<DevicePlatform, IEnumerable<string>>
+	//			{
+	//				{ DevicePlatform.WinUI, new[] { ".onnx" } },
+	//				{ DevicePlatform.Android, new[] { "application/octet-stream" } },
+	//				{ DevicePlatform.iOS, new[] { "public.data" } },
+	//				{ DevicePlatform.MacCatalyst, new[] { "public.data" } }
+	//			})
+	//		});
 
-			if (result != null)
-			{
-				StatusMessage = $"Selected file: {result.FileName}. Copying to App Data...";
+	//		if (result != null)
+	//		{
+	//			StatusMessage = $"Selected file: {result.FileName}. Copying to App Data...";
 
-				// 1. Define Target Directory in AppData
-				var targetDir = Path.Combine(FileSystem.AppDataDirectory, "GenAI_Model");
-				//if (Directory.Exists(targetDir))
-				//    Directory.Delete(targetDir, true); // Clean previous model
-				Directory.CreateDirectory(targetDir);
+	//			// 1. Define Target Directory in AppData
+	//			var targetDir = Path.Combine(FileSystem.AppDataDirectory, "GenAI_Model");
+	//			//if (Directory.Exists(targetDir))
+	//			//    Directory.Delete(targetDir, true); // Clean previous model
+	//			Directory.CreateDirectory(targetDir);
 
-				// 2. Copy the Selected ONNX File
-				// Rename to "model.onnx" to ensure GenAI finds it, as conventions usually expect this name 
-				// or genai_config.json might implicitly expect it.
-				var targetModelPath = Path.Combine(targetDir, "model.onnx");
-				using (var sourceStream = await result.OpenReadAsync())
-				using (var destStream = File.Create(targetModelPath))
-				{
-					await sourceStream.CopyToAsync(destStream);
-				}
+	//			// 2. Copy the Selected ONNX File
+	//			// Rename to "model.onnx" to ensure GenAI finds it, as conventions usually expect this name 
+	//			// or genai_config.json might implicitly expect it.
+	//			var targetModelPath = Path.Combine(targetDir, "model.onnx");
+	//			using (var sourceStream = await result.OpenReadAsync())
+	//			using (var destStream = File.Create(targetModelPath))
+	//			{
+	//				await sourceStream.CopyToAsync(destStream);
+	//			}
 
-				// 3. Attempt to Copy Sibling Configuration Files (Best Effort)
-				var sourceDir = Path.GetDirectoryName(result.FullPath);
-				if (!string.IsNullOrEmpty(sourceDir) && Directory.Exists(sourceDir))
-				{
-					var filesToCopy = new[] { "genai_config.json", "tokenizer.json", "tokenizer_config.json" };
-					foreach (var fileName in filesToCopy)
-					{
-						var sourceFile = Path.Combine(sourceDir, fileName);
-						if (File.Exists(sourceFile))
-						{
-							var targetFile = Path.Combine(targetDir, fileName);
-							File.Copy(sourceFile, targetFile, true);
-						}
-					}
+	//			// 3. Attempt to Copy Sibling Configuration Files (Best Effort)
+	//			var sourceDir = Path.GetDirectoryName(result.FullPath);
+	//			if (!string.IsNullOrEmpty(sourceDir) && Directory.Exists(sourceDir))
+	//			{
+	//				var filesToCopy = new[] { "genai_config.json", "tokenizer.json", "tokenizer_config.json" };
+	//				foreach (var fileName in filesToCopy)
+	//				{
+	//					var sourceFile = Path.Combine(sourceDir, fileName);
+	//					if (File.Exists(sourceFile))
+	//					{
+	//						var targetFile = Path.Combine(targetDir, fileName);
+	//						File.Copy(sourceFile, targetFile, true);
+	//					}
+	//				}
 
-					// Also look for external data files (*.onnx.data)
-					// We copy them as is. Note: if model.onnx references them by specific name, 
-					// renaming the main file to model.onnx shouldn't break that link *unless* the link is part of the filename convention.
-					// Usually external data is just "model.onnx.data" or "model_q4f16.onnx.data".
-					// If we rename the main file, we might arguably need to rename the data file too if it follows the "stem.data" convention?
-					// Safe bet: Copy all .data files. If loading fails, we might need to match names.
-					var dataFiles = Directory.GetFiles(sourceDir, "*.onnx.data");
-					foreach (var dataFile in dataFiles)
-					{
-						var fileName = Path.GetFileName(dataFile);
-						File.Copy(dataFile, Path.Combine(targetDir, fileName), true);
-					}
-				}
-				else
-				{
-					StatusMessage += "\nWarning: Could not access source directory to copy config files. Model might fail if not self-contained.";
-				}
+	//				// Also look for external data files (*.onnx.data)
+	//				// We copy them as is. Note: if model.onnx references them by specific name, 
+	//				// renaming the main file to model.onnx shouldn't break that link *unless* the link is part of the filename convention.
+	//				// Usually external data is just "model.onnx.data" or "model_q4f16.onnx.data".
+	//				// If we rename the main file, we might arguably need to rename the data file too if it follows the "stem.data" convention?
+	//				// Safe bet: Copy all .data files. If loading fails, we might need to match names.
+	//				var dataFiles = Directory.GetFiles(sourceDir, "*.onnx.data");
+	//				foreach (var dataFile in dataFiles)
+	//				{
+	//					var fileName = Path.GetFileName(dataFile);
+	//					File.Copy(dataFile, Path.Combine(targetDir, fileName), true);
+	//				}
+	//			}
+	//			else
+	//			{
+	//				StatusMessage += "\nWarning: Could not access source directory to copy config files. Model might fail if not self-contained.";
+	//			}
 
-				// 4. Verify Critical Config in Target
-				var targetConfig = Path.Combine(targetDir, "genai_config.json");
-				if (!File.Exists(targetConfig))
-				{
-					StatusMessage = "Error: 'genai_config.json' not found. Please ensure it was in the source folder alongside the .onnx file.";
-					return;
-				}
+	//			// 4. Verify Critical Config in Target
+	//			var targetConfig = Path.Combine(targetDir, "genai_config.json");
+	//			if (!File.Exists(targetConfig))
+	//			{
+	//				StatusMessage = "Error: 'genai_config.json' not found. Please ensure it was in the source folder alongside the .onnx file.";
+	//				return;
+	//			}
 
-				ModelPath = targetDir; // Pass DIRECTORY
-				StatusMessage = $"Loading GenAI model from: {targetDir}...";
+	//			ModelPath = targetDir; // Pass DIRECTORY
+	//			StatusMessage = $"Loading GenAI model from: {targetDir}...";
 
-				// Offload creation to BG thread
-				await Task.Run(async () =>
-				{
-					// Dispose previous
-					(_chatClient as IDisposable)?.Dispose();
+	//			// Offload creation to BG thread
+	//			await Task.Run(async () =>
+	//			{
+	//				// Dispose previous
+	//				(_chatClient as IDisposable)?.Dispose();
 
-					// Create GenAI Chat Client from the implementation-private copy
-					IsModelLoaded = _chatClient.InitializeModel(ModelPath);
-				});
+	//				// Create GenAI Chat Client from the implementation-private copy
+	//				IsModelLoaded = _chatClient.InitializeModel(ModelPath);
+	//			});
 
-				if (IsModelLoaded)
-					StatusMessage = $"GenAI Model loaded successfully.\nLocation: {ModelPath}";
+	//			if (IsModelLoaded)
+	//				StatusMessage = $"GenAI Model loaded successfully.\nLocation: {ModelPath}";
 
-				//Messages.Clear();
-				//Messages.Add(new ChatMessage(ChatRole.System, "GenAI Model Loaded & Copied. Ready to chat!"));
-			}
-		}
-		catch (Exception ex)
-		{
-			StatusMessage = $"Error loading model: {ex.Message}";
-			IsModelLoaded = false;
-			(_chatClient as IDisposable)?.Dispose();
-			_chatClient = null;
-		}
-	}
+	//			//Messages.Clear();
+	//			//Messages.Add(new ChatMessage(ChatRole.System, "GenAI Model Loaded & Copied. Ready to chat!"));
+	//		}
+	//	}
+	//	catch (Exception ex)
+	//	{
+	//		StatusMessage = $"Error loading model: {ex.Message}";
+	//		IsModelLoaded = false;
+	//		(_chatClient as IDisposable)?.Dispose();
+	//		_chatClient = null;
+	//	}
+	//}
 	#endregion
 
 	#region public methods
-	public string GetEffectiveSystemPrompt()
+	public string BuildSystemPrompt()
 	{
-		string prompt = @"# Mark Down Formatted Instructions
+		string prompt = "You will be a helpful friendly assistant"; 
+
+		if (EnableTooling)
+		{
+			prompt = @"# Mark Down Formatted Instructions
 ## Role
 You will be a helpful friendly assistant. 
   
 ";
-		if (EnableTooling)
-		{
-
 			prompt += "## Date  " + Environment.NewLine + "Date today: " + DateTime.Now + "  " + Environment.NewLine;
 
 			prompt += _toolRegistry.GetToolsSystemPrompt();
@@ -351,7 +352,7 @@ below is a valid example response:
 	void InitCommands()
 	{
 		DownloadModelCommand = new AsyncRelayCommand(DownloadModelAsync);
-		LoadLocalModelCommand = new AsyncRelayCommand(LoadLocalModelAsync);
+		//LoadLocalModelCommand = new AsyncRelayCommand(LoadLocalModelAsync);
 	}
 
 	private async Task CopyStreamWithProgressAsync(Stream source, Stream destination, long? totalBytes)
