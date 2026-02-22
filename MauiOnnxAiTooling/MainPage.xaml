@@ -1,0 +1,212 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+	xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+	xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+	x:Class="MauiOnnxAiTooling.MainPage"
+	xmlns:mai="clr-namespace:Microsoft.Extensions.AI;assembly=Microsoft.Extensions.AI"
+	xmlns:vm="clr-namespace:ViewModels"
+	xmlns:model="clr-namespace:AI.Models"
+	x:DataType="vm:AIChatViewModel">
+
+	<Grid
+		RowDefinitions="Auto, *, Auto"
+		Padding="10">
+
+		<VerticalStackLayout>
+			<Button
+				Text="Download Model"
+				Command="{Binding AISettings.DownloadModelCommand}" />
+
+			<ProgressBar
+				Progress="{Binding AISettings.DownloadProgress}"
+				IsVisible="{Binding AISettings.IsDownloading}"
+				ProgressColor="#007ACC" />
+
+			<Label
+				Text="{Binding AISettings.DownloadProgress, StringFormat='{0:P1}'}"
+				IsVisible="{Binding AISettings.IsDownloading}"
+				HorizontalOptions="Center" />
+
+			<Label
+				Text="{Binding AISettings.DownloadStatus}"
+				IsVisible="{Binding AISettings.IsDownloading}"
+				HorizontalOptions="Center" />
+
+			<Label
+				Text="{Binding StatusMessage}"
+				HorizontalOptions="Center" />
+		</VerticalStackLayout>
+
+		<!-- Chat History -->
+		<CollectionView
+			Grid.Row="1"
+			ItemsSource="{Binding Messages}"
+			ItemsLayout="VerticalList"
+			SelectionMode="None">
+			<CollectionView.ItemTemplate>
+				<DataTemplate
+					x:DataType="model:AIChatMessageModel">
+					<Grid
+						Padding="5">
+						<Border
+							StrokeShape="RoundRectangle 10"
+							Padding="10"
+							StrokeThickness="0">
+							<Border.Triggers>
+								<!-- Style depending on Role -->
+								<DataTrigger
+									TargetType="Border"
+									Binding="{Binding ChatRole}"
+									Value="user">
+									<Setter
+										Property="BackgroundColor"
+										Value="#007ACC" />
+									<Setter
+										Property="HorizontalOptions"
+										Value="End" />
+								</DataTrigger>
+								<DataTrigger
+									TargetType="Border"
+									Binding="{Binding ChatRole}"
+									Value="assistant">
+									<Setter
+										Property="BackgroundColor"
+										Value="#7F007ACC" />
+									<Setter
+										Property="HorizontalOptions"
+										Value="Start" />
+								</DataTrigger>
+								<DataTrigger
+									TargetType="Border"
+									Binding="{Binding ChatRole}"
+									Value="system">
+									<Setter
+										Property="BackgroundColor"
+										Value="#FFCC00" />
+									<Setter
+										Property="HorizontalOptions"
+										Value="Center" />
+								</DataTrigger>
+								<DataTrigger
+									TargetType="Border"
+									Binding="{Binding ChatRole}"
+									Value="tool">
+									<Setter
+										Property="BackgroundColor"
+										Value="#DDDDDD" />
+									<Setter
+										Property="HorizontalOptions"
+										Value="Start" />
+									<Setter
+										Property="IsVisible"
+										Value="False" />
+									<!-- Hide raw tool output usually? Or show for debug? -->
+								</DataTrigger>
+							</Border.Triggers>
+
+							<Grid>
+								<!-- WebView for HTML Content -->
+								<WebView
+									Source="{Binding StreamingText, Converter={StaticResource HtmlSourceConverter}}"
+									HeightRequest="300"
+									WidthRequest="300"
+									IsVisible="False">
+									<WebView.Triggers>
+										<DataTrigger
+											TargetType="WebView"
+											Binding="{Binding ResponseType}"
+											Value="Html">
+											<Setter
+												Property="IsVisible"
+												Value="True" />
+										</DataTrigger>
+									</WebView.Triggers>
+								</WebView>
+
+								<!-- Keep Label for User messages for better performance/look -->
+								<Label
+									Text="{Binding StreamingText}"
+									LineBreakMode="WordWrap">
+									<Label.Triggers>
+										<DataTrigger
+											TargetType="Label"
+											Binding="{Binding ChatRole}"
+											Value="assistant">
+											<Setter
+												Property="Text"
+												Value="{Binding StreamingText}" />
+										</DataTrigger>
+										<DataTrigger
+											TargetType="Label"
+											Binding="{Binding ChatRole}"
+											Value="system">
+											<Setter
+												Property="Text"
+												Value="{Binding Text}" />
+										</DataTrigger>
+										<DataTrigger
+											TargetType="Label"
+											Binding="{Binding ChatRole}"
+											Value="user">
+											<Setter
+												Property="Text"
+												Value="{Binding Text}" />
+										</DataTrigger>
+										<DataTrigger
+											TargetType="Label"
+											Binding="{Binding ResponseType}"
+											Value="Html">
+											<Setter
+												Property="IsVisible"
+												Value="False" />
+										</DataTrigger>
+									</Label.Triggers>
+								</Label>
+							</Grid>
+						</Border>
+					</Grid>
+				</DataTemplate>
+			</CollectionView.ItemTemplate>
+		</CollectionView>
+
+		<!-- Input Area -->
+		<Grid
+			Grid.Row="2"
+			ColumnDefinitions="*, Auto"
+			ColumnSpacing="10"
+			Padding="0,10,0,0">
+			<Editor
+				Grid.Column="0"
+				Text="{Binding UserInput}"
+				Placeholder="Type a message..."
+				AutoSize="TextChanges"
+				MaximumHeightRequest="100" />
+
+			<Button
+				Grid.Column="1"
+				Text="Send"
+				Command="{Binding SendMessageCommand}">
+				<Button.Triggers>
+					<DataTrigger
+						TargetType="Button"
+						Binding="{Binding IsProcessing}"
+						Value="True">
+						<Setter
+							Property="IsEnabled"
+							Value="False" />
+					</DataTrigger>
+				</Button.Triggers>
+			</Button>
+		</Grid>
+
+		<!-- Loading Indicator -->
+		<ActivityIndicator
+			Grid.RowSpan="2"
+			IsRunning="{Binding IsProcessing}"
+			IsVisible="{Binding IsProcessing}"
+			HorizontalOptions="Center"
+			VerticalOptions="Center"
+			Color="#007ACC" />
+	</Grid>
+
+</ContentPage>
