@@ -1,6 +1,5 @@
 ﻿using AI.ChatClientProviders;
 using AI.ChatClientProviders.Onnx;
-using Microsoft.ML.OnnxRuntimeGenAI;
 
 namespace MauiOnnxAiTooling.AI.ChatClientProviders.Onnx;
 
