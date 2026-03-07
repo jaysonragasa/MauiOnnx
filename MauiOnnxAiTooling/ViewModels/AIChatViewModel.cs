@@ -10,13 +10,13 @@ using System.Text.Json;
 using System.Windows.Input;
 
 namespace ViewModels;
+
 public class AIChatViewModel : ObservableObject
 {
 	#region fields
 	private readonly IChatClientProvider _chatClient;
 	private string _modelPath = string.Empty;
 	private AIChatToolRegistration _toolRegistry;
-	private CancellationTokenSource _cts = null;
 	#endregion
 
 	#region properties
@@ -87,7 +87,7 @@ public class AIChatViewModel : ObservableObject
 
 		IsProcessing = true;
 
-		_cts = new CancellationTokenSource();
+		_chatClient.CancellationTokenSource = new CancellationTokenSource();
 
 		// recontext (refresh memory)
 		var fullContext = new List<AIChatMessageModel>();
@@ -125,10 +125,14 @@ public class AIChatViewModel : ObservableObject
 			bool startTool = false;
 			bool startEnding = false;
 			bool validResponseStart = false;
+			ChatOptions chatOptions = new ChatOptions()
+			{
+
+			};
 
 			try
 			{
-				await foreach (var token in _chatClient.GetStreamingResponseAsync(fullContext, cancellationToken: _cts.Token))
+				await foreach (var token in _chatClient.GetStreamingResponseAsync(fullContext, cancellationToken: _chatClient.CancellationTokenSource.Token))
 				{
 					role = token.Role?.Value?.ToString() ?? "";
 
@@ -138,7 +142,7 @@ public class AIChatViewModel : ObservableObject
 
 					System.Diagnostics.Debug.WriteLine("token=" + token);
 
-					if(!AISettings.EnableTooling)
+					if (!AISettings.EnableTooling)
 					{
 						assistantMsg.StreamingText += text;
 						continue;
@@ -255,10 +259,7 @@ public class AIChatViewModel : ObservableObject
 
 	private void StopResponse()
 	{
-		if (_cts != null && !_cts.IsCancellationRequested)
-		{
-			_cts.Cancel();
-		}
+		_chatClient.CancelResponse();
 	}
 	#endregion
 
@@ -270,7 +271,7 @@ public class AIChatViewModel : ObservableObject
 	public async Task AutoLoadModelAsync()
 	{
 		var targetDir = Path.Combine(FileSystem.AppDataDirectory, "GenAI_Model");
-		var targetConfig = Path.Combine(targetDir, "genai_config.json");
+		var targetConfig = Path.Combine(targetDir, _chatClient.BaseConfigFile);
 		var targetModel = Path.Combine(targetDir, _chatClient.BaseLLM);
 
 		if (File.Exists(targetConfig) && File.Exists(targetModel))

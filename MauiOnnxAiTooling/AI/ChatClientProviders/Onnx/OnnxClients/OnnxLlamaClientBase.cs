@@ -2,11 +2,18 @@
 
 namespace AI.ChatClientProviders.Onnx;
 
-public class LlamaClientBase : IChatClientProvider
+public class OnnxLlamaClientBase : IChatClientProvider
 {
 	public string DownloadBaseUrl { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 	public string BaseLLM { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 	public Dictionary<string, string> FilesToDownload { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+	public string BaseConfigFile { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+	public CancellationTokenSource CancellationTokenSource { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+	public Task CancelResponse()
+	{
+		throw new NotImplementedException();
+	}
 
 	public void Dispose()
 	{

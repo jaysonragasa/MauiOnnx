@@ -16,6 +16,11 @@
 			<Button
 				Text="Download Model"
 				Command="{Binding AISettings.DownloadModelCommand}" />
+			
+			<Button
+				Text="Open Model" 
+				Command="{Binding AISettings.LoadLocalModelCommand}"
+				/>
 
 			<ProgressBar
 				Progress="{Binding AISettings.DownloadProgress}"
@@ -124,12 +129,12 @@
 								</WebView>-->
 
 								<!-- Keep Label for User messages for better performance/look -->
-								<Label
-									Text="{Binding StreamingText}"
-									LineBreakMode="WordWrap">
-									<Label.Triggers>
+								<Editor
+									AutoSize="TextChanges"
+									Text="{Binding StreamingText}">
+									<Editor.Triggers>
 										<DataTrigger
-											TargetType="Label"
+											TargetType="Editor"
 											Binding="{Binding ChatRole}"
 											Value="assistant">
 											<Setter
@@ -137,7 +142,7 @@
 												Value="{Binding StreamingText}" />
 										</DataTrigger>
 										<DataTrigger
-											TargetType="Label"
+											TargetType="Editor"
 											Binding="{Binding ChatRole}"
 											Value="system">
 											<Setter
@@ -145,7 +150,7 @@
 												Value="{Binding Text}" />
 										</DataTrigger>
 										<DataTrigger
-											TargetType="Label"
+											TargetType="Editor"
 											Binding="{Binding ChatRole}"
 											Value="user">
 											<Setter
@@ -153,15 +158,15 @@
 												Value="{Binding Text}" />
 										</DataTrigger>
 										<DataTrigger
-											TargetType="Label"
+											TargetType="Editor"
 											Binding="{Binding ResponseType}"
 											Value="Html">
 											<Setter
 												Property="IsVisible"
 												Value="False" />
 										</DataTrigger>
-									</Label.Triggers>
-								</Label>
+									</Editor.Triggers>
+								</Editor>
 							</Grid>
 						</Border>
 					</Grid>
@@ -172,7 +177,7 @@
 		<!-- Input Area -->
 		<Grid
 			Grid.Row="2"
-			ColumnDefinitions="*, Auto"
+			ColumnDefinitions="*, Auto, Auto"
 			ColumnSpacing="10"
 			Padding="0,10,0,0">
 			<Editor
@@ -197,6 +202,11 @@
 					</DataTrigger>
 				</Button.Triggers>
 			</Button>
+
+			<Button
+				Grid.Column="2"
+				Text="Stop"
+				Command="{Binding StopResponseCommand}"/>
 		</Grid>
 
 		<!-- Loading Indicator -->

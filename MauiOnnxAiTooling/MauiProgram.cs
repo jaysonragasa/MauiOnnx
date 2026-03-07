@@ -1,7 +1,7 @@
 ﻿using AI.ChatClientProviders;
-using AI.ChatClientProviders.Onnx;
 using AI.Tools;
 using CommunityToolkit.Maui;
+using MauiOnnxAiTooling.AI.ChatClientProviders.Onnx;
 using Microsoft.Extensions.Logging;
 using ViewModels;
 
@@ -33,7 +33,9 @@ namespace MauiOnnxAiTooling
         public static MauiAppBuilder RegisterAppServices(this MauiAppBuilder mauiAppBuilder)
         {
 			// AI Services
-			mauiAppBuilder.Services.AddSingleton<IChatClientProvider, OnnxChatClient>();
+			mauiAppBuilder.Services.AddSingleton<IChatClientProvider, OnnxPhi3ClientBase>();
+			//mauiAppBuilder.Services.AddSingleton<IChatClientProvider, OnnxWizardVicunaClientBase>();
+			//mauiAppBuilder.Services.AddSingleton<IChatClientProvider, OnnxLlamaServerClient>();
 
 			// Register Chat Tools
 			//mauiAppBuilder.Services.AddSingleton<IAIChatTool, Infor.PublicSector.Mobile.Core.AI.Tools.Implementations.WorkOrderCountTool>();
