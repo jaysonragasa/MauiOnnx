@@ -38,25 +38,25 @@ public class OnnxChatClientBase : IChatClient
 	#endregion
 
 	#region static
-	public static OnnxChatClientBase Create(string modelPath)
+	public static OnnxChatClientBase Create(string modelDirectory)
 	{
 		var client = new OnnxChatClientBase();
-		client.InitializeModel(modelPath);
+		client.InitializeModelDirectory(modelDirectory);
 		return client;
 	}
 	#endregion
 
-	public virtual bool InitializeModel(string modelPath)
+	public virtual bool InitializeModelDirectory(string modelDirectory)
 	{
 		try
 		{
-			_model = new Microsoft.ML.OnnxRuntimeGenAI.Model(modelPath);
+			_model = new Microsoft.ML.OnnxRuntimeGenAI.Model(modelDirectory);
 			_tokenizer = new Tokenizer(_model);
-			_metadata = new ChatClientMetadata(
-				"MauiOnnxAiTooling",
-				new Uri(""),
-				"GenAI Model"
-			);
+			//_metadata = new ChatClientMetadata(
+			//	"MauiOnnxAiTooling",
+			//	new Uri("https://github.com/jaysonragasa?tab=repositories"),
+			//	"GenAI Model"
+			//);
 			return true;
 		}
 		catch (Exception ex)

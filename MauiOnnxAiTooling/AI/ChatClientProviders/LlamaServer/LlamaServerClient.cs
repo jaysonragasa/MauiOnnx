@@ -35,7 +35,7 @@ public class LlamaServerClient : IChatClientProvider, IChatClient
 		throw new NotImplementedException();
 	}
 
-	public bool InitializeModel(string modelPath)
+	public bool InitializeModelDirectory(string modelPath)
 	{
 		throw new NotImplementedException();
 	}

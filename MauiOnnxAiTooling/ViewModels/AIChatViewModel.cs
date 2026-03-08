@@ -15,7 +15,7 @@ public class AIChatViewModel : ObservableObject
 {
 	#region fields
 	private readonly IChatClientProvider _chatClient;
-	private string _modelPath = string.Empty;
+	private string _modelDirectory = string.Empty;
 	private AIChatToolRegistration _toolRegistry;
 	#endregion
 
@@ -281,17 +281,17 @@ public class AIChatViewModel : ObservableObject
 			{
 				MainThread.BeginInvokeOnMainThread(() => StatusMessage = "Found existing model. Loading...");
 
-				_modelPath = targetDir;
+				_modelDirectory = targetDir;
 
 				await Task.Run(async () =>
 				{
-					IsModelLoaded = _chatClient.InitializeModel(_modelPath);
+					IsModelLoaded = _chatClient.InitializeModelDirectory(_modelDirectory);
 				});
 
 				if (IsModelLoaded)
 					MainThread.BeginInvokeOnMainThread(() =>
 					{
-						StatusMessage = $"Model Loaded from: {_modelPath}";
+						StatusMessage = $"Model Loaded from: {_modelDirectory}";
 						Messages.Add(AIChatMessageModel.Create(ChatRole.System, "Existing Model Auto-Loaded. Ready!"));
 					});
 			}

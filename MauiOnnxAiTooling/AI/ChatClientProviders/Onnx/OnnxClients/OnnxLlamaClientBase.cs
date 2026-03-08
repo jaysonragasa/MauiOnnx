@@ -35,7 +35,7 @@ public class OnnxLlamaClientBase : IChatClientProvider
 		throw new NotImplementedException();
 	}
 
-	public bool InitializeModel(string modelPath)
+	public bool InitializeModelDirectory(string modelPath)
 	{
 		throw new NotImplementedException();
 	}

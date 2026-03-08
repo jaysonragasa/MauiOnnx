@@ -175,7 +175,7 @@ public class AIChatSettingsViewModel : ObservableObject
 			await Task.Run(async () =>
 			{
 				(_chatClient as IDisposable)?.Dispose();
-				IsModelLoaded = _chatClient.InitializeModel(ModelPath);
+				IsModelLoaded = _chatClient.InitializeModelDirectory(ModelPath);
 			});
 
 			if (IsModelLoaded)
@@ -285,7 +285,7 @@ public class AIChatSettingsViewModel : ObservableObject
 					(_chatClient as IDisposable)?.Dispose();
 
 					// Create GenAI Chat Client from the implementation-private copy
-					IsModelLoaded = _chatClient.InitializeModel(ModelPath);
+					IsModelLoaded = _chatClient.InitializeModelDirectory(ModelPath);
 				});
 
 				if (IsModelLoaded)

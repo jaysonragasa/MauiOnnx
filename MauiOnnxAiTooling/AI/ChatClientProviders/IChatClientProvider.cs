@@ -8,6 +8,6 @@ public interface IChatClientProvider : IChatClient
 	string BaseLLM { get; set; }
 	string BaseConfigFile { get; set; }
 	Dictionary<string, string> FilesToDownload { get; set; }
-	bool InitializeModel(string modelPath);
+	bool InitializeModelDirectory(string modelPath);
 	Task CancelResponse();
 }
